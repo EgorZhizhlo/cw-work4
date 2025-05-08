@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/salon_beauty}
+    username: ${SPRING_DATASOURCE_USERNAME:salon_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:salon_pass}
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET:ChangeMe123!}
+    expiration-ms: ${APP_JWT_EXPIRATION_MS:86400000}

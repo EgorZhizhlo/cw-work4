@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header('Бронирование')}"></head>
+<body>
+<div class="container py-5">
+    <div class="card mx-auto" style="max-width: 600px;">
+        <div class="card-body">
+            <h3 class="card-title mb-4">Запись на услугу</h3>
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+            <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
+            <p><strong>Услуга:</strong> <span th:text="${service.name}"></span></p>
+            <p><strong>Дата и время:</strong> <span th:text="${#temporals.format(appointmentTime,'dd.MM.yyyy HH:mm')}"></span></p>
+
+            <form th:action="@{/services/{id}/book(id=${service.id})}" method="post">
+                <input type="hidden" name="time" th:value="${appointmentTime}"/>
+                <button type="submit" class="btn btn-primary w-100">Подтвердить</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:14
+    container_name: salonbeauty-db
+    restart: always
+    environment:
+      POSTGRES_DB: salon_beauty
+      POSTGRES_USER: salon_user
+      POSTGRES_PASSWORD: salon_pass
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  app:
+    build: .
+    container_name: salonbeauty-app
+    restart: on-failure
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/salon_beauty
+      SPRING_DATASOURCE_USERNAME: salon_user
+      SPRING_DATASOURCE_PASSWORD: salon_pass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_JWT_SECRET: qwandsewiENFDNASMVKAOOA21324141241241241241DKASDAOdsfkqmkdmdkfm2i3er513r45trugt6
+      APP_JWT_EXPIRATION_MS: 86400000
+    ports:
+      - "8080:8080"
+
+volumes:
+  db_data:

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: header('Вход')}"></head>
+<body>
+<div class="card shadow-sm" style="max-width:400px;margin:6rem auto;">
+    <div class="card-body">
+        <h4 class="card-title text-center mb-4">Вход</h4>
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <form th:action="@{/login}" method="post">
+            <div class="form-floating mb-3">
+                <input type="text" name="username" class="form-control" id="user" placeholder="Имя" required/>
+                <label for="user">Имя пользователя</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="password" name="password" class="form-control" id="pass" placeholder="Пароль" required/>
+                <label for="pass">Пароль</label>
+            </div>
+            <button class="btn btn-primary w-100">Войти</button>
+        </form>
+        <div class="text-center mt-3"><small>Нет аккаунта? <a th:href="@{/register}">Регистрация</a></small></div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

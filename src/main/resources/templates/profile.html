@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/header :: header('Профиль')}"></head>
+<body>
+<div class="container py-5">
+
+    <!-- Форма редактирования профиля -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Данные профиля</h5>
+                    <form th:action="@{/profile}" method="post" class="row g-3">
+                        <div class="form-floating col-12">
+                            <input id="fn" class="form-control" type="text"
+                                   name="firstName" placeholder="Имя"
+                                   th:value="${user.firstName}"/>
+                            <label for="fn">Имя</label>
+                        </div>
+
+                        <div class="form-floating col-12">
+                            <input id="ln" class="form-control" type="text"
+                                   name="lastName" placeholder="Фамилия"
+                                   th:value="${user.lastName}"/>
+                            <label for="ln">Фамилия</label>
+                        </div>
+
+                        <div class="form-floating col-12">
+                            <input id="em" class="form-control" type="email"
+                                   name="email" placeholder="Email"
+                                   th:value="${user.email}"/>
+                            <label for="em">Email</label>
+                        </div>
+
+                        <div class="col-12">
+                            <button class="btn btn-primary w-100">Сохранить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Таблица записей -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title"
+                        th:text="${viewType == 'master'} ? 'Мои клиенты сегодня' : 'Мои записи'">
+                        Мои записи
+                    </h5>
+
+                    <table class="table table-hover align-middle">
+                        <thead>
+                        <tr>
+                            <!-- Шапка для мастера / клиента -->
+                            <th th:if="${viewType == 'master'}">Клиент</th>
+                            <th>Услуга</th>
+
+                            <!-- Дата / время -->
+                            <th th:if="${viewType == 'master'}">Дата</th>
+                            <th th:if="${viewType == 'master'}">Время</th>
+
+                            <th th:if="${viewType == 'client'}">Мастер</th>
+                            <th th:if="${viewType == 'client'}">Дата&nbsp;и&nbsp;время</th>
+
+                            <th>Статус</th>
+                            <th th:if="${viewType == 'client'}"></th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr th:each="a : ${appointments}">
+                            <!-- Имя клиента (для мастера) -->
+                            <td th:if="${viewType == 'master'}"
+                                th:text="${a.client.firstName + ' ' + a.client.lastName}">Клиент
+                            </td>
+
+                            <!-- Услуга -->
+                            <td th:text="${a.service.name}">Услуга</td>
+
+                            <!-- Дата / время для мастера -->
+                            <td th:if="${viewType == 'master'}"
+                                th:text="${#temporals.format(a.date,'dd.MM.yyyy')}">01.01.2025</td>
+                            <td th:if="${viewType == 'master'}"
+                                th:text="${#temporals.format(a.startTime,'HH:mm')}">12:00</td>
+
+                            <!-- Мастер для клиента -->
+                            <td th:if="${viewType == 'client'}"
+                                th:text="${a.master.firstName + ' ' + a.master.lastName}">Мастер
+                            </td>
+
+                            <!-- Дата и время одной строкой для клиента -->
+                            <td th:if="${viewType == 'client'}"
+                                th:text="${#strings.concat(#temporals.format(a.date,'dd.MM.yyyy'),' ',#temporals.format(a.startTime,'HH:mm'))}">
+                                01.01.2025&nbsp;12:00
+                            </td>
+
+                            <!-- Статус -->
+                            <!-- Статус -->
+                            <td>
+                                <span th:text="${a.status}"
+                                      th:classappend="${a.status.name() == 'BOOKED'} ? 'badge bg-success'
+                                                     : (${a.status.name() == 'CANCELLED'} ? 'badge bg-secondary' : 'badge bg-info')">
+                                    BOOKED
+                                </span>
+                            </td>
+
+
+                            <!-- Кнопка отмены (только клиент и только если BOOKED) -->
+                            <td th:if="${viewType == 'client'}">
+                                <form th:if="${a.status.name() == 'BOOKED'}"
+                                      th:action="@{/profile/bookings/cancel/{id}(id=${a.id})}"
+                                      method="post">
+                                    <button class="btn btn-sm btn-danger">Отменить</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
