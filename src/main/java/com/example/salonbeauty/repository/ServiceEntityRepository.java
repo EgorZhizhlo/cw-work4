@@ -11,4 +11,6 @@ public interface ServiceEntityRepository extends JpaRepository<ServiceEntity, Lo
 
     // (Опционально) все услуги данного мастера
     List<ServiceEntity> findAllByMasterId(Long masterId);
+
+    void deleteByMaster_Id(Long id);
 }

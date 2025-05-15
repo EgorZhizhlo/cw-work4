@@ -43,6 +43,9 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional
     public void deleteUser(Long id) {
+        apptRepo.deleteByMaster_Id(id);
+        apptRepo.deleteByClient_Id(id);
+        serviceRepo.deleteByMaster_Id(id);
         userRepo.deleteById(id);
     }
 

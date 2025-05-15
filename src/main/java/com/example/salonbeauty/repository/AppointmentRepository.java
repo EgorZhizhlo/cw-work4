@@ -25,6 +25,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     List<Appointment> findByClient(User client);
 
+    void deleteByMaster_Id(Long id);
+    void deleteByClient_Id(Long id);
+
     List<Appointment> findByMaster(User master);
     long countByStatus(AppointmentStatus status);
 
