@@ -129,7 +129,6 @@ public class PublicController {
         String token = authService.login(username, password);
         Cookie cookie = new Cookie("JWT", token);
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setMaxAge((int) (authService.getExpirationMs() / 1000));
         response.addCookie(cookie);
