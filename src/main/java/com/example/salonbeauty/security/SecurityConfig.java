@@ -1,15 +1,18 @@
+// SecurityConfig.java
 package com.example.salonbeauty.security;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.*;
-import org.springframework.security.authentication.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.*;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.*;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -26,46 +29,46 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider prov = new DaoAuthenticationProvider();
+        var prov = new DaoAuthenticationProvider();
         prov.setUserDetailsService(userDetailsService);
         prov.setPasswordEncoder(passwordEncoder());
         return prov;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // Отключаем CSRF
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/logout")
-                )
+                // Полностью отключаем CSRF, т.к. аутентификация по JWT
+                .csrf(AbstractHttpConfigurer::disable)
 
-                // Stateless сессии (новый метод-перегрузка вместо sessionManagement())
+                // Сессий нет — всё stateless
                 .sessionManagement(sm -> sm
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )  // :contentReference[oaicite:0]{index=0}
+                )
 
-                // Регистрируем наш DaoAuthenticationProvider
+                // Наш Dao-провайдер
                 .authenticationProvider(daoAuthenticationProvider())
 
-                // Авторизация через лямбда-DSL (вместо authorizeHttpRequests() без аргументов)
+                // Правила доступа
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/", "/login", "/register",
                                 "/css/**", "/js/**", "/about",
                                 "/images/**", "/static/**", "/services"
                         ).permitAll()
-                        .requestMatchers("/profile/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/booking/**").hasRole("CLIENT")
+                        .requestMatchers("/profile/**").authenticated()
                         .anyRequest().authenticated()
                 )
 
-                // JWT-фильтр до формирования аутентификации
+                // И запускаем наш JWT-фильтр ДО стандартного UsernamePasswordAuthenticationFilter
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -1,3 +1,4 @@
+// JwtAuthFilter.java
 package com.example.salonbeauty.security;
 
 import jakarta.servlet.FilterChain;
@@ -29,14 +30,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
 
-    // Токен теперь берём только из cookie "JWT"
-    private String getJwtFromCookie(HttpServletRequest request) {
+    private String parseJwt(HttpServletRequest request) {
+        // 1) Попытаться вытянуть из cookie "JWT"
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("JWT".equals(cookie.getName())) {
                     return cookie.getValue();
                 }
             }
+        }
+        // 2) fallback: заголовок Authorization: Bearer <token>
+        String header = request.getHeader("Authorization");
+        if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
+            return header.substring(7);
         }
         return null;
     }
@@ -47,22 +53,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
         try {
-            String jwt = getJwtFromCookie(request);
-
-            if (StringUtils.hasText(jwt) && jwtUtils.validateToken(jwt)) {
-                String username = jwtUtils.getUsernameFromToken(jwt);
-
+            String token = parseJwt(request);
+            if (StringUtils.hasText(token) && jwtUtils.validateToken(token)) {
+                String username = jwtUtils.getUsernameFromToken(token);
                 UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication =
+
+                UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
                                 userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request));
+                auth.setDetails(new WebAuthenticationDetailsSource()
+                        .buildDetails(request));
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(auth);
             }
-        } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e.getMessage(), e);
+        } catch (Exception ex) {
+            logger.error("Cannot set user authentication: {}", ex.getMessage(), ex);
         }
 
         filterChain.doFilter(request, response);
