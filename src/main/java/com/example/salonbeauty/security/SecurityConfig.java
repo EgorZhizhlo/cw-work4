@@ -4,6 +4,7 @@ package com.example.salonbeauty.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -44,47 +45,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // отключаем CSRF, т.к. стейтлесс и JWT
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // без сессий, весь контекст хранится в JWT
                 .sessionManagement(sm ->
                         sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                // подключаем наш UserDetailsService + PasswordEncoder
                 .authenticationProvider(daoAuthenticationProvider())
-
-                // правила доступа
                 .authorizeHttpRequests(auth -> auth
-                        // публичные страницы
-                        .requestMatchers(
-                                "/",
-                                "/logout",
-                                "/about",
-                                "/services",              // список услуг
-                                "/services/*",            // детали услуги: /services/{id}
-                                "/register", "/login",    // формы регистрации и логина
-                                "/css/**", "/js/**", "/images/**"
-                        ).permitAll()
-
-                        // бронирование услуги по GET /services/{id}/book
+                        .requestMatchers("/", "/about", "/services/**", "/css/**","/js/**","/images/**").permitAll()
+                        .requestMatchers("/login", "/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/logout").permitAll()
                         .requestMatchers("/services/*/book").authenticated()
-
-                        // профиль пользователя и изменения (GET /profile, POST /profile)
                         .requestMatchers("/profile/**").authenticated()
-
-                        // управление своими бронированиями (GET и POST в /profile/bookings/**)
-                        .requestMatchers("/profile/bookings/**").authenticated()
-
-                        // только для админа
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-
-                        // всё остальное — аутентификация
                         .anyRequest().authenticated()
                 )
-
-                // наш фильтр вытаскивает JWT из cookie и кладёт в SecurityContext
+                .logout(logout -> logout
+                        .logoutUrl("/logout")           // CSRF отключён, так что POST /logout пройдёт
+                        .logoutSuccessUrl("/login?logout")
+                        .deleteCookies("JWT")
+                )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
