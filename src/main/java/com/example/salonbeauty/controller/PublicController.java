@@ -135,14 +135,21 @@ public class PublicController {
         return "redirect:/";
     }
 
+    // PublicController.java
     @GetMapping("/logout")
-    public String logout(HttpServletRequest request, HttpServletResponse response) throws ServletException {
-        request.logout();
-        Cookie cookie = new Cookie("JWT", null);
+    public String logout(HttpServletRequest request, HttpServletResponse response) {
+
+        // Удаляем JWT-куку, устанавливая пустое значение и maxAge=0
+        Cookie cookie = new Cookie("JWT", "");
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setMaxAge(0);
+
+        // Сохраняем флаг secure в соответствии с протоколом
+        cookie.setSecure(request.isSecure());
+
         response.addCookie(cookie);
         return "redirect:/login?logout";
     }
+
 }
