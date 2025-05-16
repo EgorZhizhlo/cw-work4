@@ -43,9 +43,11 @@
                     th:classappend="${current}=='Профиль' ? 'active'">
                     <a class="nav-link" th:href="@{/profile}">Профиль</a>
                 </li>
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="nav-link btn btn-link p-0">Выход</button>
-                </form>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <form th:action="@{/logout}" method="post" class="d-inline">
+                        <button type="submit" class="nav-link btn btn-link p-0">Выход</button>
+                    </form>
+                </li>
             </ul>
         </div>
     </div>
