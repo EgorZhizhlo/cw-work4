@@ -60,6 +60,7 @@ public class SecurityConfig {
                         // публичные страницы
                         .requestMatchers(
                                 "/",
+                                "/logout",
                                 "/about",
                                 "/services",              // список услуг
                                 "/services/*",            // детали услуги: /services/{id}
