@@ -1,8 +1,8 @@
+// JwtUtils.java
 package com.example.salonbeauty.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -11,7 +11,6 @@ import java.security.Key;
 import java.util.Date;
 
 @Component
-@RequiredArgsConstructor
 public class JwtUtils {
 
     @Value("${app.jwt.secret}")
@@ -20,8 +19,8 @@ public class JwtUtils {
     @Value("${app.jwt.expiration-ms}")
     private long jwtExpirationMs;
 
-    // Build the same Key for signing/parsing
     private Key getSigningKey() {
+        // обязательно: секрет ≥ 64 байт для HS512
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 

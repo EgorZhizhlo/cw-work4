@@ -28,48 +28,41 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private JwtUtils jwtUtils;
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private CustomUserDetailsService userDetailsService;
 
     private String parseJwt(HttpServletRequest request) {
-        // 1) Попытаться вытянуть из cookie "JWT"
         if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if ("JWT".equals(cookie.getName())) {
-                    return cookie.getValue();
+            for (Cookie c : request.getCookies()) {
+                if ("JWT".equals(c.getName())) {
+                    return c.getValue();
                 }
             }
         }
-        // 2) fallback: заголовок Authorization: Bearer <token>
-        String header = request.getHeader("Authorization");
-        if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
-            return header.substring(7);
+        String h = request.getHeader("Authorization");
+        if (StringUtils.hasText(h) && h.startsWith("Bearer ")) {
+            return h.substring(7);
         }
         return null;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest req,
+                                    HttpServletResponse res,
+                                    FilterChain chain)
             throws ServletException, IOException {
         try {
-            String token = parseJwt(request);
+            String token = parseJwt(req);
             if (StringUtils.hasText(token) && jwtUtils.validateToken(token)) {
-                String username = jwtUtils.getUsernameFromToken(token);
-                UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-
+                String user = jwtUtils.getUsernameFromToken(token);
+                UserDetails ud = userDetailsService.loadUserByUsername(user);
                 UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-                auth.setDetails(new WebAuthenticationDetailsSource()
-                        .buildDetails(request));
-
+                        new UsernamePasswordAuthenticationToken(ud, null, ud.getAuthorities());
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         } catch (Exception ex) {
-            logger.error("Cannot set user authentication: {}", ex.getMessage(), ex);
+            logger.error("JWT auth filter error: {}", ex.getMessage(), ex);
         }
-
-        filterChain.doFilter(request, response);
+        chain.doFilter(req, res);
     }
 }

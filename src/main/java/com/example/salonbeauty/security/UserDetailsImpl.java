@@ -1,3 +1,4 @@
+// UserDetailsImpl.java
 package com.example.salonbeauty.security;
 
 import com.example.salonbeauty.model.User;
@@ -17,19 +18,21 @@ public class UserDetailsImpl implements UserDetails {
     private final Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsImpl(User user) {
-        this.id = user.getId();
+        this.id       = user.getId();
         this.username = user.getUsername();
         this.password = user.getPasswordHash();
+        // делаем имя роли в верхнем регистре, чтобы hasRole("ADMIN") сработал
+        String roleName = user.getRole().getName().toUpperCase();
         this.authorities = List.of(
-                new SimpleGrantedAuthority("ROLE_" + user.getRole().getName())
+                new SimpleGrantedAuthority("ROLE_" + roleName)
         );
     }
 
-    @Override public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
-    @Override public String getPassword() { return password; }
-    @Override public String getUsername() { return username; }
-    @Override public boolean isAccountNonExpired() { return true; }
-    @Override public boolean isAccountNonLocked() { return true; }
-    @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return true; }
+    @Override public Collection<? extends GrantedAuthority> getAuthorities()    { return authorities; }
+    @Override public String getPassword()                                       { return password;    }
+    @Override public String getUsername()                                       { return username;    }
+    @Override public boolean isAccountNonExpired()                              { return true;        }
+    @Override public boolean isAccountNonLocked()                               { return true;        }
+    @Override public boolean isCredentialsNonExpired()                          { return true;        }
+    @Override public boolean isEnabled()                                        { return true;        }
 }

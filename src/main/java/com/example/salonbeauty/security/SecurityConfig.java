@@ -1,4 +1,4 @@
-// SecurityConfig.java
+// src/main/java/com/example/salonbeauty/security/SecurityConfig.java
 package com.example.salonbeauty.security;
 
 import lombok.RequiredArgsConstructor;
@@ -37,38 +37,53 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
+            AuthenticationConfiguration cfg) throws Exception {
+        return cfg.getAuthenticationManager();
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // Полностью отключаем CSRF, т.к. аутентификация по JWT
+                // отключаем CSRF, т.к. стейтлесс и JWT
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // Сессий нет — всё stateless
-                .sessionManagement(sm -> sm
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                // без сессий, весь контекст хранится в JWT
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                // Наш Dao-провайдер
+                // подключаем наш UserDetailsService + PasswordEncoder
                 .authenticationProvider(daoAuthenticationProvider())
 
-                // Правила доступа
+                // правила доступа
                 .authorizeHttpRequests(auth -> auth
+                        // публичные страницы
                         .requestMatchers(
-                                "/", "/login", "/register",
-                                "/css/**", "/js/**", "/about",
-                                "/images/**", "/static/**", "/services"
+                                "/",
+                                "/about",
+                                "/services",              // список услуг
+                                "/services/*",            // детали услуги: /services/{id}
+                                "/register", "/login",    // формы регистрации и логина
+                                "/css/**", "/js/**", "/images/**"
                         ).permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/booking/**").hasRole("CLIENT")
+
+                        // бронирование услуги по GET /services/{id}/book
+                        .requestMatchers("/services/*/book").authenticated()
+
+                        // профиль пользователя и изменения (GET /profile, POST /profile)
                         .requestMatchers("/profile/**").authenticated()
+
+                        // управление своими бронированиями (GET и POST в /profile/bookings/**)
+                        .requestMatchers("/profile/bookings/**").authenticated()
+
+                        // только для админа
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        // всё остальное — аутентификация
                         .anyRequest().authenticated()
                 )
 
-                // И запускаем наш JWT-фильтр ДО стандартного UsernamePasswordAuthenticationFilter
+                // наш фильтр вытаскивает JWT из cookie и кладёт в SecurityContext
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
