@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/extras/spring-security6">
 <head th:replace="~{fragments/header :: header('Записи (админ)')}"></head>
 <body>
 <div class="container py-5">
@@ -47,7 +48,6 @@
                         </form>
                         <form th:action="@{/admin/appointments/delete/{id}(id=${a.id})}" method="post" class="d-inline"
                               onsubmit="return confirm('Удалить запись #' + [[${a.id}]] + '?');">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                             <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
                         </form>
                     </td>
