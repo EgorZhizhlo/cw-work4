@@ -36,7 +36,6 @@
                     <td>
                         <form th:action="@{/admin/appointments/status/{id}(id=${a.id})}" method="post" class="d-inline mb-1">
                             <!-- CSRF -->
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                             <select name="status" class="form-select form-select-sm d-inline w-auto">
                                 <option th:each="s : ${T(com.example.salonbeauty.model.AppointmentStatus).values()}"
                                         th:value="${s}"
